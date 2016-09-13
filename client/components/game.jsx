@@ -1,77 +1,94 @@
 import React from 'react';
+
 import Cell from './cell';
 
-import {FIELD, utils} from '../utils';
-
 export default class Game extends React.Component {
-  constructor(props) {
+  constructor(props){
     super(props);
 
     this.state = {
-      currentPlayer: 1,
-      gameOver: false
-    };
+      currentPlayer: this.props.firstPlayer,
+      field: ["", "", "",
+              "", "", "",
+              "", "", ""],
+      currentFigure: "X",
+      gameResult: ""
+    }
 
     this.renderCell = this.renderCell.bind(this);
-    this.getFigure = this.getFigure.bind(this);
-    this.endTurn = this.endTurn.bind(this);
+    this._handleFieldChange = this._handleFieldChange.bind(this);
+    this._handleGameOver = this._handleGameOver.bind(this);
+    this._handleReset = this._handleReset.bind(this);
   }
 
   componentDidMount() {
-    this.props.onGameStatusChange(this.getGameStatus());
+    const socket = this.props.socket;
+    socket.on('field:change', this._handleFieldChange);
+    socket.on('game:over', this._handleGameOver);
+    socket.on('game:reset', this._handleReset);
   }
 
-  getFigure() {
-    return this.state.currentPlayer === 1 ? 'X' : 'O';
+  _handleFieldChange({nextPlayer, fieldState, nextFigure}) {
+    this.setState({
+      currentPlayer: nextPlayer,
+      field: fieldState,
+      currentFigure: nextFigure
+    });
   }
 
-  getNextPlayer() {
-    return this.state.currentPlayer === 1 ? 2 : 1;
+  _handleGameOver(gameResult) {
+    this.setState({ gameResult });
   }
 
-  getGameStatus() {
-    let result = utils.gameOverCheck(FIELD);
-    if(result) {
-      this.setState({ gameOver: true });
-      return result;
+  _handleReset(firstPlayer) {
+    this.setState({
+      currentPlayer: firstPlayer,
+      field: ["", "", "",
+              "", "", "",
+              "", "", ""],
+      currentFigure: "X",
+      gameResult: ""
+    })
+  }
+
+  invokeReset(room) {
+    this.props.socket.emit('game:reset', room);
+  }
+
+  generateStatusMessage(){
+    if(this.state.gameResult){
+      return this.state.gameResult;
     }
-    return `Player ${this.getFigure()}'s turn.`
+    const userId = localStorage.getItem("userId")
+    return (userId === this.state.currentPlayer) ? "Your turn." : "Your Opponent's turn."
   }
 
-
-  endTurn() {
-    this.setState( {currentPlayer: this.getNextPlayer()},
-     () => this.props.onGameStatusChange(this.getGameStatus()) );
-  }
-
-  renderCell(id) {
+  renderCell(figure, id) {
     return (
-          <Cell
-            key={id}
-            id={id}
-            getFigure={this.getFigure}
-            endTurn={this.endTurn}
-            isGameOver={this.state.gameOver}
-          />
-        );
+        <Cell
+          key={id}
+          id={id}
+          content={figure}
+          socket={this.props.socket}
+          figureToPlace={this.state.currentFigure}
+          currentPlayer={this.state.currentPlayer}
+          room={this.props.room}
+          gameResult={this.state.gameResult}
+        />
+    );
   }
 
   render() {
-
     return (
-      <table className="field">
-        <tbody>
-          <tr className="row">
-            {[0, 1, 2].map(this.renderCell)}
-          </tr>
-          <tr className="row">
-            {[3, 4, 5].map(this.renderCell)}
-          </tr>
-          <tr className="row">
-            {[6, 7, 8].map(this.renderCell)}
-          </tr>
-        </tbody>
-      </table>
-    );
+      <div className="game">
+        <div className="status-bar">
+          <h2>{this.generateStatusMessage()}</h2>
+        </div>
+        <div className="field">
+          {this.state.field.map(this.renderCell)}
+        </div>
+        <button className="reset-button" onClick={ () => this.invokeReset(this.props.room) }>Reset!</button>
+      </div>
+    )
   }
 }

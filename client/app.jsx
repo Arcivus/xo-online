@@ -1,41 +1,119 @@
-import React from 'react';
+import React, { PropTypes } from 'react';
 import ReactDOM from 'react-dom';
-import {FIELD, utils} from './utils';
+import { Router, Route, hashHistory } from 'react-router';
 
 import Game from './components/game';
+
+const socket = io.connect('http://localhost:3080');
+
+const userId = localStorage.getItem("userId") || randomId();
+localStorage.setItem("userId", userId);
+
+function randomId() {
+  return Math.floor(Math.random() * 1e11);
+}
 
 class App extends React.Component {
   constructor(props){
     super(props);
 
     this.state = {
-      game: () => <Game onGameStatusChange={(gameStatus) => this.setState( {gameStatus} )}/>,
-      gameStatus: ""
+      currentRoom: "",
+      gameIsOn: false,
+      firstPlayer: "",
+      error: ""
      }
+
+    this._hostGame = this._hostGame.bind(this);
+    this._attemptJoinByInvite = this._attemptJoinByInvite.bind(this);
+    this._startGame = this._startGame.bind(this);
   }
 
-  newGame() {
-    this.setState({
-        game: () => <Game onGameStatusChange={(gameStatus) => this.setState( {gameStatus} )}/>,
-        gameStatus: ""
-    });
-    for(let i=0;i<FIELD.length;i++){
-      FIELD[i] = "";
+  static contextTypes = {     // used for rerouting by React-Router
+     router: PropTypes.object
+  }
+
+  componentDidMount() {
+    socket.on('game:start', this._startGame);
+    socket.on('room:terminate', this._hostGame);
+    socket.on('failure:join', (errorMessage) => {this._hostGame(errorMessage)} )
+
+    if(this.props.params.id){
+      this._attemptJoinByInvite(this.props.params.id);
+    } else {
+      this._hostGame();
     }
   }
 
+  _attemptJoinByInvite(room) {
+    this.setState({currentRoom: room});
+    socket.emit('room:join', {userId, room});
+    this.context.router.push('/');
+  }
+
+  _hostGame(errorMessage) {
+    const room = randomId();
+    socket.emit('room:host', { userId, room });
+    this.setState({ gameIsOn: false,
+                    currentRoom: room,
+                    error: errorMessage
+                  });
+  }
+
+  _startGame(firstPlayerId) {
+    this.setState({
+      gameIsOn: true,
+      firstPlayer: firstPlayerId,
+      error: ""
+    });
+  }
+
+
+  generateNotification() {
+    if(this.state.error){ // if problem with joining to session occured we inform user but still host new game
+      return (
+        <div className="notification">
+          <p>Oops! <strong>{this.state.error}!</strong> But here's link you can send to your friend to start a new game:</p>
+          <h3>localhost:3080/#/invite/{this.state.currentRoom}</h3>
+        </div>
+      )
+    }
+    return (
+      <div className="notification">
+        <p>Send your friend this link:</p>
+        <h3>localhost:3080/#/invite/{this.state.currentRoom}</h3>
+      </div>
+    );
+  }
+
   render() {
-    const ActiveGame = this.state.game;
+    const {gameIsOn, firstPlayer, currentRoom} = this.state;
+    {
+      if(!gameIsOn){
+        return (
+          <div className="app">
+            { this.generateNotification() }
+          </div>
+        );
+      }
+    }
     return (
       <div className="app">
-        <div className="status-bar">
-          <h2>{this.state.gameStatus}</h2>
-        </div>
-        <ActiveGame />
-        <button onClick={this.newGame.bind(this)}>Reset!</button>
+        <Game
+          socket={socket}
+          firstPlayer={firstPlayer}
+          room={currentRoom}
+        />
+        <div className="chatbox"></div>
       </div>
     );
   }
 }
 
-ReactDOM.render( <App />, document.querySelector('.container') );
+
+ReactDOM.render(
+  <Router history={hashHistory}>
+    <Route path="/" component={App}/>
+    <Route path="invite/:id" component={App}/>
+  </Router>,
+  document.querySelector('.container') );
