@@ -76,13 +76,9 @@ io.on('connection', function(socket) {
   });
 
 	// Chat events
-	// Unlike gameplay section, chat won't store info on server, just pass to each user in session.
+	// Unlike gameplay section, chat won't store info on server, just pass messages from player to player.
 	socket.on('message:send', function(data){
-		var message = {
-			name: "Opponent",
-			text: data.text
-		}
-		socket.broadcast.to(data.room).emit('message:send', message);
+		socket.broadcast.to(data.room).emit('message:send', data.text);
 	});
 });
 

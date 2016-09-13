@@ -27573,6 +27573,12 @@
 
 	var _reactDom2 = _interopRequireDefault(_reactDom);
 
+	var _audio = __webpack_require__(237);
+
+	var audio = _interopRequireWildcard(_audio);
+
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -27597,49 +27603,61 @@
 	    _this.renderMessage = _this.renderMessage.bind(_this);
 	    _this.handleSubmit = _this.handleSubmit.bind(_this);
 	    _this.handleChange = _this.handleChange.bind(_this);
-	    _this.addMessage = _this.addMessage.bind(_this);
+	    _this._receiveMessage = _this._receiveMessage.bind(_this);
 	    return _this;
 	  }
 
 	  _createClass(Chat, [{
 	    key: 'componentDidMount',
 	    value: function componentDidMount() {
-	      this.props.socket.on('message:send', this.addMessage);
+	      this.props.socket.on('message:send', this._receiveMessage);
 	    }
 	  }, {
 	    key: 'componentDidUpdate',
 	    value: function componentDidUpdate() {
-	      // scroll to last message
+	      // autoscroll to last message
 	      var node = _reactDom2.default.findDOMNode(this.refs.last);
 	      if (node) {
 	        node.scrollIntoView();
 	      }
 	    }
 	  }, {
-	    key: 'addMessage',
-	    value: function addMessage(message) {
+	    key: '_receiveMessage',
+	    value: function _receiveMessage(message) {
 	      var messages = this.state.messages;
 
 	      messages.push({
-	        name: message.name,
+	        name: "Opponent",
+	        text: message
+	      });
+	      this.setState({ messages: messages });
+	      audio.play('boop');
+	    }
+	  }, {
+	    key: 'sendMessage',
+	    value: function sendMessage(message) {
+	      var messages = this.state.messages;
+
+	      messages.push({
+	        name: "You",
 	        text: message.text
 	      });
 	      this.setState({ messages: messages });
+	      this.props.socket.emit('message:send', message);
 	    }
 	  }, {
 	    key: 'handleSubmit',
 	    value: function handleSubmit(e) {
 	      e.preventDefault();
-	      var message = {
-	        name: "You",
-	        text: this.state.text,
-	        room: this.props.room
-	      };
-	      // Save message to our state, send message to opponent
-	      this.addMessage(message);
-	      this.props.socket.emit('message:send', message);
+	      if (this.state.text) {
+	        var message = {
+	          text: this.state.text,
+	          room: this.props.room
+	        };
+	        this.sendMessage(message);
 
-	      this.setState({ text: "" });
+	        this.setState({ text: "" });
+	      }
 	    }
 	  }, {
 	    key: 'handleChange',

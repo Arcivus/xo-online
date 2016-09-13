@@ -1,6 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
+import * as audio from '../audio';
+
 export default class Chat extends React.Component {
   constructor(props){
     super(props);
@@ -13,42 +15,52 @@ export default class Chat extends React.Component {
     this.renderMessage = this.renderMessage.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleChange = this.handleChange.bind(this);
-    this.addMessage = this.addMessage.bind(this);
+    this._receiveMessage = this._receiveMessage.bind(this);
   }
 
   componentDidMount() {
-    this.props.socket.on('message:send', this.addMessage);
+    this.props.socket.on('message:send', this._receiveMessage);
   }
 
   componentDidUpdate() {
-    // scroll to last message
+    // autoscroll to last message
     const node = ReactDOM.findDOMNode(this.refs.last);
     if(node){
       node.scrollIntoView();
     }
   }
 
-  addMessage(message) {
+  _receiveMessage(message) {
     const {messages} = this.state;
     messages.push({
-                  name: message.name,
+      name: "Opponent",
+      text: message
+    });
+    this.setState({ messages });
+    audio.play('boop');
+  }
+
+  sendMessage(message) {
+    const {messages} = this.state;
+    messages.push({
+                  name: "You",
                   text: message.text
                  });
     this.setState({ messages });
+    this.props.socket.emit('message:send', message);
   }
 
   handleSubmit(e) {
     e.preventDefault();
-    let message = {
-      name: "You",
-      text: this.state.text,
-      room: this.props.room
-    }
-    // Save message to our state, send message to opponent
-    this.addMessage(message);
-    this.props.socket.emit('message:send', message);
+    if(this.state.text){
+      let message = {
+        text: this.state.text,
+        room: this.props.room
+      }
+      this.sendMessage(message);
 
-    this.setState({ text: "" });
+      this.setState({ text: "" });
+    }
   }
 
   handleChange(e) {

@@ -83,15 +83,16 @@ header, footer {
   height: 510px;
   background-color: #D8D4C3;
   margin: 0;
-  padding: 3px;
+  padding: 5px;
   border: 1px black solid;
   overflow: auto;
+  line-height: 1.418;
 }
 
 .message {
   width: 100%;
   font-size: 18px;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 .message-form {
