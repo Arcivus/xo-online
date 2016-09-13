@@ -5,7 +5,7 @@ import { Router, Route, hashHistory } from 'react-router';
 import Game from './components/game';
 import Chat from './components/chat';
 
-const socket = io.connect('https://stark-lake-33138.herokuapp.com');
+const socket = io.connect('http://localhost:3080');
 
 function randomId() {
   return Math.floor(Math.random() * 1e11);
@@ -73,14 +73,14 @@ class App extends React.Component {
       return (
         <div className="notification">
           <p>Oops! <strong>{this.state.error}!</strong> But here's link you can send to your friend to start a new game:</p>
-          <h3>stark-lake-33138.herokuapp.com/#/invite/{this.state.currentRoom}</h3>
+          <h3>localhost:3080/#/invite/{this.state.currentRoom}</h3>
         </div>
       )
     }
     return (
       <div className="notification">
         <p>Send your friend this link:</p>
-        <h3>stark-lake-33138.herokuapp.com/#/invite/{this.state.currentRoom}</h3>
+        <h3>localhost:3080/#/invite/{this.state.currentRoom}</h3>
       </div>
     );
   }
