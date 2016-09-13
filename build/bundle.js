@@ -70,7 +70,7 @@
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var socket = io.connect('http://localhost:3080');
+	var socket = io.connect('https://stark-lake-33138.herokuapp.com');
 
 	var userId = localStorage.getItem("userId") || randomId();
 	localStorage.setItem("userId", userId);
@@ -166,7 +166,7 @@
 	          _react2.default.createElement(
 	            'h3',
 	            null,
-	            'localhost:3080/#/invite/',
+	            'stark-lake-33138.herokuapp.com/#/invite/',
 	            this.state.currentRoom
 	          )
 	        );
@@ -182,7 +182,7 @@
 	        _react2.default.createElement(
 	          'h3',
 	          null,
-	          'localhost:3080/#/invite/',
+	          'stark-lake-33138.herokuapp.com/#/invite/',
 	          this.state.currentRoom
 	        )
 	      );
