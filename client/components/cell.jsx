@@ -28,8 +28,7 @@ export default class Cell extends React.Component {
   }
 
   placeFigure() {
-    const userId = localStorage.getItem('userId');
-    const {currentPlayer, figureToPlace, gameResult, socket, room} = this.props;
+    const {currentPlayer, figureToPlace, gameResult, socket, room, userId} = this.props;
     console.log(currentPlayer, userId);
     if(!this.state.isTaken && !gameResult && currentPlayer === userId){
       this.setState({ fade: true }); // add fading animation

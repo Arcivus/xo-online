@@ -94,6 +94,10 @@ module.exports = (function (){
     Sessions[room].currentPlayer = (Sessions[room].currentPlayer ? 0 : 1);
   }
 
+  var doesSessionExist = function(room) {
+    return Sessions[room] ? true : false ;
+  }
+
   var isSessionFull = function(room) { // check if there are still places to fill
     if(Sessions[room] && Sessions[room].PlayerX && Sessions[room].PlayerO){
       return true
@@ -145,6 +149,7 @@ module.exports = (function (){
     hostSession,
     joinSession,
     terminateSession,
+    doesSessionExist,
     isSessionFull,
     getFigureToPlace,
     placeFigure,

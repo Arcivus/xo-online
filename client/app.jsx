@@ -3,11 +3,9 @@ import ReactDOM from 'react-dom';
 import { Router, Route, hashHistory } from 'react-router';
 
 import Game from './components/game';
+import Chat from './components/chat';
 
 const socket = io.connect('https://stark-lake-33138.herokuapp.com');
-
-const userId = localStorage.getItem("userId") || randomId();
-localStorage.setItem("userId", userId);
 
 function randomId() {
   return Math.floor(Math.random() * 1e11);
@@ -21,7 +19,8 @@ class App extends React.Component {
       currentRoom: "",
       gameIsOn: false,
       firstPlayer: "",
-      error: ""
+      error: "",
+      userId: randomId()
      }
 
     this._hostGame = this._hostGame.bind(this);
@@ -47,13 +46,13 @@ class App extends React.Component {
 
   _attemptJoinByInvite(room) {
     this.setState({currentRoom: room});
-    socket.emit('room:join', {userId, room});
+    socket.emit('room:join', { userId: this.state.userId, room});
     this.context.router.push('/');
   }
 
   _hostGame(errorMessage) {
     const room = randomId();
-    socket.emit('room:host', { userId, room });
+    socket.emit('room:host', { userId: this.state.userId, room });
     this.setState({ gameIsOn: false,
                     currentRoom: room,
                     error: errorMessage
@@ -103,8 +102,12 @@ class App extends React.Component {
           socket={socket}
           firstPlayer={firstPlayer}
           room={currentRoom}
+          userId={this.state.userId}
         />
-        <div className="chatbox"></div>
+        <Chat
+          socket={socket}
+          room={currentRoom}
+          />
       </div>
     );
   }

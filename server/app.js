@@ -21,6 +21,7 @@ var io = require('socket.io').listen(server);
 io.on('connection', function(socket) {
 	var currentRoom; // used to terminate session in socket.on('disconnect') event
 
+	// Session connection
 	socket.on('room:host', function(data) {
 		currentRoom = data.room;
 		socket.join(currentRoom);
@@ -28,20 +29,32 @@ io.on('connection', function(socket) {
 	});
 
 	socket.on('room:join', function(data) {
-		var room = data.room
-		if(game.isSessionFull(room)){
-			socket.emit('failure:join', "Session is full");
-		} else {
-			currentRoom = room;
-			socket.join(currentRoom);
-			game.joinSession(data.userId, room);
-
-			if(game.isSessionFull(currentRoom)) {
-				io.to(currentRoom).emit('game:start', game.getCurrentPlayerId(currentRoom));
+		var room = data.room;
+		if(game.doesSessionExist(room)){
+			if(game.isSessionFull(room)){ // If session user tries to connect is full then we inform him and host new game
+				socket.emit('failure:join', "Session is full");
 			}
+			else {
+				currentRoom = room;
+				socket.join(currentRoom);
+				game.joinSession(data.userId, room);
+
+				if(game.isSessionFull(currentRoom)) { // checks if both players are present and game can be started
+					io.to(currentRoom).emit('game:start', game.getCurrentPlayerId(currentRoom));
+				}
+			}
+		}
+		else { // If user tried to join by old/non-existant invite we inform him and host new game
+			socket.emit('failure:join', "Game with this ID does not exist");
 		}
 	});
 
+	socket.on('disconnect', function() {
+		game.terminateSession(currentRoom);
+		io.to(currentRoom).emit('room:terminate', "Your Opponent left");
+	});
+
+	// Gameplay events
   socket.on('game:reset', function(room) {
     game.resetField(room);
     io.to(room).emit('game:reset', game.getCurrentPlayerId(room));
@@ -62,10 +75,15 @@ io.on('connection', function(socket) {
 		}
   });
 
-	socket.on('disconnect', function() {
-		game.terminateSession(currentRoom);
-		io.to(currentRoom).emit('room:terminate', "Your Opponent left");
-	})
+	// Chat events
+	// Unlike gameplay section, chat won't store info on server, just pass to each user in session.
+	socket.on('message:send', function(data){
+		var message = {
+			name: "Opponent",
+			text: data.text
+		}
+		socket.broadcast.to(data.room).emit('message:send', message);
+	});
 });
 
 // Start server

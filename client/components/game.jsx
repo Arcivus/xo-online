@@ -59,8 +59,7 @@ export default class Game extends React.Component {
     if(this.state.gameResult){
       return this.state.gameResult;
     }
-    const userId = localStorage.getItem("userId")
-    return (userId === this.state.currentPlayer) ? "Your turn." : "Your Opponent's turn."
+    return (this.props.userId === this.state.currentPlayer) ? "Your turn." : "Your Opponent's turn."
   }
 
   renderCell(figure, id) {
@@ -74,6 +73,7 @@ export default class Game extends React.Component {
           currentPlayer={this.state.currentPlayer}
           room={this.props.room}
           gameResult={this.state.gameResult}
+          userId={this.props.userId}
         />
     );
   }

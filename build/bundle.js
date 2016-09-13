@@ -62,6 +62,10 @@
 
 	var _game2 = _interopRequireDefault(_game);
 
+	var _chat = __webpack_require__(238);
+
+	var _chat2 = _interopRequireDefault(_chat);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -71,9 +75,6 @@
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 	var socket = io.connect('https://stark-lake-33138.herokuapp.com');
-
-	var userId = localStorage.getItem("userId") || randomId();
-	localStorage.setItem("userId", userId);
 
 	function randomId() {
 	  return Math.floor(Math.random() * 1e11);
@@ -91,7 +92,8 @@
 	      currentRoom: "",
 	      gameIsOn: false,
 	      firstPlayer: "",
-	      error: ""
+	      error: "",
+	      userId: randomId()
 	    };
 
 	    _this._hostGame = _this._hostGame.bind(_this);
@@ -121,14 +123,14 @@
 	    key: '_attemptJoinByInvite',
 	    value: function _attemptJoinByInvite(room) {
 	      this.setState({ currentRoom: room });
-	      socket.emit('room:join', { userId: userId, room: room });
+	      socket.emit('room:join', { userId: this.state.userId, room: room });
 	      this.context.router.push('/');
 	    }
 	  }, {
 	    key: '_hostGame',
 	    value: function _hostGame(errorMessage) {
 	      var room = randomId();
-	      socket.emit('room:host', { userId: userId, room: room });
+	      socket.emit('room:host', { userId: this.state.userId, room: room });
 	      this.setState({ gameIsOn: false,
 	        currentRoom: room,
 	        error: errorMessage
@@ -210,9 +212,13 @@
 	        _react2.default.createElement(_game2.default, {
 	          socket: socket,
 	          firstPlayer: firstPlayer,
-	          room: currentRoom
+	          room: currentRoom,
+	          userId: this.state.userId
 	        }),
-	        _react2.default.createElement('div', { className: 'chatbox' })
+	        _react2.default.createElement(_chat2.default, {
+	          socket: socket,
+	          room: currentRoom
+	        })
 	      );
 	    }
 	  }]);
@@ -27356,8 +27362,7 @@
 	      if (this.state.gameResult) {
 	        return this.state.gameResult;
 	      }
-	      var userId = localStorage.getItem("userId");
-	      return userId === this.state.currentPlayer ? "Your turn." : "Your Opponent's turn.";
+	      return this.props.userId === this.state.currentPlayer ? "Your turn." : "Your Opponent's turn.";
 	    }
 	  }, {
 	    key: 'renderCell',
@@ -27370,7 +27375,8 @@
 	        figureToPlace: this.state.currentFigure,
 	        currentPlayer: this.state.currentPlayer,
 	        room: this.props.room,
-	        gameResult: this.state.gameResult
+	        gameResult: this.state.gameResult,
+	        userId: this.props.userId
 	      });
 	    }
 	  }, {
@@ -27478,13 +27484,13 @@
 	  }, {
 	    key: 'placeFigure',
 	    value: function placeFigure() {
-	      var userId = localStorage.getItem('userId');
 	      var _props = this.props;
 	      var currentPlayer = _props.currentPlayer;
 	      var figureToPlace = _props.figureToPlace;
 	      var gameResult = _props.gameResult;
 	      var socket = _props.socket;
 	      var room = _props.room;
+	      var userId = _props.userId;
 
 	      console.log(currentPlayer, userId);
 	      if (!this.state.isTaken && !gameResult && currentPlayer === userId) {
@@ -27530,6 +27536,7 @@
 	});
 	var sounds = {};
 	sounds.draw = new Audio("assets/audio/draw.mp3");
+	sounds.draw.volume = 0.5;
 	sounds.boop = new Audio("assets/audio/boop.mp3");
 	sounds.boop.volume = 0.1;
 
@@ -27545,6 +27552,147 @@
 	        sounds[sound].pause();
 	    }
 	};
+
+/***/ },
+/* 238 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactDom = __webpack_require__(34);
+
+	var _reactDom2 = _interopRequireDefault(_reactDom);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var Chat = function (_React$Component) {
+	  _inherits(Chat, _React$Component);
+
+	  function Chat(props) {
+	    _classCallCheck(this, Chat);
+
+	    var _this = _possibleConstructorReturn(this, (Chat.__proto__ || Object.getPrototypeOf(Chat)).call(this, props));
+
+	    _this.state = {
+	      messages: [],
+	      text: ""
+	    };
+
+	    _this.renderMessage = _this.renderMessage.bind(_this);
+	    _this.handleSubmit = _this.handleSubmit.bind(_this);
+	    _this.handleChange = _this.handleChange.bind(_this);
+	    _this.addMessage = _this.addMessage.bind(_this);
+	    return _this;
+	  }
+
+	  _createClass(Chat, [{
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.props.socket.on('message:send', this.addMessage);
+	    }
+	  }, {
+	    key: 'componentDidUpdate',
+	    value: function componentDidUpdate() {
+	      // scroll to last message
+	      var node = _reactDom2.default.findDOMNode(this.refs.last);
+	      if (node) {
+	        node.scrollIntoView();
+	      }
+	    }
+	  }, {
+	    key: 'addMessage',
+	    value: function addMessage(message) {
+	      var messages = this.state.messages;
+
+	      messages.push({
+	        name: message.name,
+	        text: message.text
+	      });
+	      this.setState({ messages: messages });
+	    }
+	  }, {
+	    key: 'handleSubmit',
+	    value: function handleSubmit(e) {
+	      e.preventDefault();
+	      var message = {
+	        name: "You",
+	        text: this.state.text,
+	        room: this.props.room
+	      };
+	      // Save message to our state, send message to opponent
+	      this.addMessage(message);
+	      this.props.socket.emit('message:send', message);
+
+	      this.setState({ text: "" });
+	    }
+	  }, {
+	    key: 'handleChange',
+	    value: function handleChange(e) {
+	      this.setState({ text: e.target.value });
+	    }
+	  }, {
+	    key: 'renderMessage',
+	    value: function renderMessage(message, i) {
+	      return _react2.default.createElement(
+	        'li',
+	        { key: i, className: 'message', ref: 'last' },
+	        _react2.default.createElement(
+	          'strong',
+	          null,
+	          message.name,
+	          ':'
+	        ),
+	        ' ',
+	        _react2.default.createElement(
+	          'span',
+	          null,
+	          message.text
+	        )
+	      );
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'chatbox' },
+	        _react2.default.createElement(
+	          'ul',
+	          { className: 'message-list' },
+	          this.state.messages.map(this.renderMessage)
+	        ),
+	        _react2.default.createElement(
+	          'form',
+	          { className: 'message-form', onSubmit: this.handleSubmit },
+	          _react2.default.createElement('input', {
+	            onChange: this.handleChange,
+	            value: this.state.text
+	          })
+	        )
+	      );
+	    }
+	  }]);
+
+	  return Chat;
+	}(_react2.default.Component);
+
+	exports.default = Chat;
 
 /***/ }
 /******/ ]);
