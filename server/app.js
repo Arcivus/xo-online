@@ -10,7 +10,7 @@ var server = http.createServer(app);
 
 // Configuration
 app.use(express.static(__dirname + '/..'));
-app.set('port', 3080);
+app.set('port', (process.env.PORT || 3080));
 
 if (process.env.NODE_ENV === 'development') {
 	app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
@@ -70,5 +70,5 @@ io.on('connection', function(socket) {
 
 // Start server
 server.listen(app.get('port'), function() {
-  console.log('Express server listening on port %d in %s mode', (process.env.PORT || app.get('port')), app.get('env'));
+  console.log('Express server listening on port %d in %s mode', app.get('port'), app.get('env'));
 });
